@@ -80,8 +80,7 @@ jobs:
         run: echo "Deploying..."
   report:
     needs: [lint, deploy]
-    #if: failure()
-    if: ${{ !cancelled() && contains(needs.deploy.result, 'skipped') }}
+    if: !cancelled() && failure() && contains(needs.deploy.result, 'skipped') 
     runs-on: ubuntu-latest
     steps:
       - name: Output information
