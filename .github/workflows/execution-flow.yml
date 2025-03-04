@@ -79,11 +79,12 @@ jobs:
       - name: Deploy
         run: echo "Deploying..."
   report:
-    needs: [lint, test]
+    needs: [lint, deploy]
+    #if: failure()
+    if: ${{ !cancelled() && contains(needs.deploy.result, 'skipped') }}
     runs-on: ubuntu-latest
     steps:
       - name: Output information
-        if: failure()
         run: |
           echo "Something went wrong"
           echo "${{ toJSON(github) }}"
