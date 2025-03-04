@@ -79,7 +79,7 @@ jobs:
       - name: Deploy
         run: echo "Deploying..."
   report:
-    needs: test
+    needs: deploy
     if: failure()
     #&& needs.deploy.result == 'skipped' 
     runs-on: ubuntu-latest
