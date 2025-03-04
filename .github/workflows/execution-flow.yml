@@ -80,7 +80,7 @@ jobs:
         run: echo "Deploying..."
   report:
     needs: [lint, test, build, deploy]
-    if: ${{ contains(needs.*.result, 'failure') }}
+    if: needs.lint.result == 'failure' || needs.test.result == 'failure' || needs.build.result == 'failure' || needs.deploy.result == 'failure' 
     runs-on: ubuntu-latest
     steps:
       - name: Output information
