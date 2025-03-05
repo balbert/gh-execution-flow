@@ -2,10 +2,17 @@ name: Matrix Demo
 on: push
 jobs:
   build:
+    continue-on-error: true
     strategy:
       matrix:
         node-version: [18.20.7, 20.18.3, 22.14.0] # Hydrogen, Iron, Jod
         operating-system: [ubuntu-latest, windows-latest]
+        include:
+          - node-version: 23.9.0
+            operating-system: ubuntu-lasest
+        exclude:
+          - node-version: 18.20.7
+            operating-system: windows-latest
     runs-on: ${{ matrix.operating-system }}
     steps:
       - name: Get code
