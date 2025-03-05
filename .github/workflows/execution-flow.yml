@@ -78,16 +78,42 @@ jobs:
         run: ls
       - name: Deploy
         run: echo "Deploying..."
+
   report:
-    needs: [lint, test, build, deploy]
-    #if: failure()
-    if: always() && (needs.lint.result != 'success' || needs.test.result != 'success' || needs.build.result != 'success' || needs.deploy.result != 'success')
+    needs:
+      - lint
+      - test
+      - build
+      - deploy
     runs-on: ubuntu-latest
+    env:
+      LINT_FLAG: ${{ needs.lint.result != 'success' }}
+      TEST_FLAG: ${{ needs.test.result != 'success' }}
+      BUILD_FLAG: ${{ needs.build.result != 'success' }}
+      DEPLOY_FLAG: ${{ needs.deploy.result != 'success' }}
+
+    # Talk about stupid, this one liner should work
+    # if: failure()
+
+    # By default, once a step in a running job fails, all the subsequent steps
+    # in this job will be skipped and this job will be marked as failed.
+
+    # So here's the hack
+    if: always() && (needs.lint.result != 'success' || needs.test.result != 'success' || needs.build.result != 'success' || needs.deploy.result != 'success')
+
     steps:
+      - name: Debug information          
+        run: |
+          echo "LINT_FLAG: $LINT_FLAG"
+          echo "TEST_FLAG: $TEST_FLAG"
+          echo "BUILD_FLAG: $BUILD_FLAG"
+          echo "DEPLOY_FLAG: $DEPLOY_FLAG"
+
       - name: Output information
         run: |
           echo "Something went wrong"
           echo "${{ toJSON(github) }}"
+
   results:
     needs: [lint, test, build, deploy, report]
     if: always()
