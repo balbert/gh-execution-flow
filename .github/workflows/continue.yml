@@ -1,0 +1,156 @@
+name: Website Deployment
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+      - name: Lint code
+        run: npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+      - name: Test code
+        continue-on-error: true
+        id: run-tests
+        run: npm run test
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: test.json
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+      - name: Build website
+        id: build-website
+        run: npm run build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-files
+          path: dist
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Get build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-files
+      - name: Output contents
+        run: ls
+      - name: Deploy
+        run: echo "Deploying..."
+
+  report:
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+      - test
+      - build
+      - deploy
+    env:
+      LINT_SUCCESS: ${{ needs.lint.result == 'success' }}
+      TEST_SUCCESS: ${{ needs.test.result == 'success' }}
+      BUILD_SUCCESS: ${{ needs.build.result == 'success' }}
+      DEPLOY_SUCCESS: ${{ needs.deploy.result == 'success' }}
+
+    # Talk about stupid, this one liner should work
+    # if: failure()
+
+    # By default, once a step in a running job fails, all the subsequent steps
+    # in this job will be skipped and this job will be marked as failed.
+
+    # So here's the hack
+    if: always() && (needs.lint.result != 'success' || needs.test.result != 'success' || needs.build.result != 'success' || needs.deploy.result != 'success')
+
+    # Tried to simplify the hack, but no dice, you
+    # can't use environment variables in conditionals.
+    # Conditionals are scoped at job level...
+    # if: always() && !($LINT_SUCCESS && $RESULT_SUCCESS && $BUILD_SUCCESS && $DEPLOY_SUCCESS)
+
+    steps:
+      - name: Output debug information          
+        run: |
+          echo "LINT_SUCCESS: $LINT_SUCCESS"
+          echo "TEST_SUCCESS: $TEST_SUCCESS"
+          echo "BUILD_SUCCESS: $BUILD_SUCCESS"
+          echo "DEPLOY_SUCCESS: $DEPLOY_SUCCESS"
+
+      - name: Output context information
+        run: |
+          echo "Something went wrong"
+          echo "${{ toJSON(github) }}"
+
+  results: # Debug
+    runs-on: ubuntu-latest
+    needs: [lint, test, build, deploy, report]
+    if: always()
+
+    env:
+      LINT_SUCCESS: ${{ needs.lint.result == 'success' }}
+      TEST_SUCCESS: ${{ needs.test.result == 'success' }}
+      BUILD_SUCCESS: ${{ needs.build.result == 'success' }}
+      DEPLOY_SUCCESS: ${{ needs.deploy.result == 'success' }}
+      REPORT_SUCCESS: ${{ needs.report.result == 'success' }}
+
+    steps:
+      - name: Output results
+        run: |
+          echo
+          echo "Results..."
+          echo
+          echo "Job lint result: ${{ needs.lint.result }}"
+          echo "Job test result: ${{ needs.test.result }}"
+          echo "Job build result: ${{ needs.build.result }}"
+          echo "Job deploy result: ${{ needs.deploy.result }}" 
+          echo "Job report result: ${{ needs.report.result }}" 
+          echo
+          echo "Job lint succeeded: $LINT_SUCCESS"
+          echo "Job test succeeded: $TEST_SUCCESS"
+          echo "Job build succeeded: $BUILD_SUCCESS"
+          echo "Job deploy succeeded: $DEPLOY_SUCCESS" 
+          echo "Job report succeeded: $REPORT_SUCCESS" 
+          echo
+        
