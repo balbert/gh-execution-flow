@@ -88,7 +88,8 @@ jobs:
           echo "Something went wrong"
           echo "${{ toJSON(github) }}"
   results:
-    needs: [lint, test, build, deploy]
+    needs: [lint, test, build, deploy, report]
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Output results
@@ -97,4 +98,5 @@ jobs:
           echo "TEST: ${{ needs.test.result }}"
           echo "BUILD: ${{ needs.build.result }}"
           echo "DEPLOY: ${{ needs.deploy.result }}" 
+          echo "REPORT: ${{ needs.report.result }}" 
         
