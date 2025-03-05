@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -20,6 +21,7 @@ jobs:
         run: npm ci
       - name: Lint code
         run: npm run lint
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -43,6 +45,7 @@ jobs:
         with:
           name: test-report
           path: test.json
+
   build:
     needs: test
     runs-on: ubuntu-latest
@@ -66,6 +69,7 @@ jobs:
         with:
           name: dist-files
           path: dist
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -101,6 +105,11 @@ jobs:
     # So here's the hack
     if: always() && (needs.lint.result != 'success' || needs.test.result != 'success' || needs.build.result != 'success' || needs.deploy.result != 'success')
 
+    # Tried to simplify the hack, but no dice, you
+    # can't use environment variables in conditionals.
+    # Conditionals are scoped at job level...
+    # if: always() && ( $LINT_FLAG || $RESULT_FLAG || $BUILD_FLAG || $DEPLOY_FLAG )
+
     steps:
       - name: Debug information          
         run: |
@@ -118,12 +127,23 @@ jobs:
     needs: [lint, test, build, deploy, report]
     if: always()
     runs-on: ubuntu-latest
+    env:
+      LINT_FLAG: ${{ needs.lint.result == 'success' }}
+      TEST_FLAG: ${{ needs.test.result == 'success' }}
+      BUILD_FLAG: ${{ needs.build.result == 'success' }}
+      DEPLOY_FLAG: ${{ needs.deploy.result == 'success' }}
     steps:
       - name: Output results
         run: |
-          echo "LINT: ${{ needs.lint.result }}"
-          echo "TEST: ${{ needs.test.result }}"
-          echo "BUILD: ${{ needs.build.result }}"
-          echo "DEPLOY: ${{ needs.deploy.result }}" 
-          echo "REPORT: ${{ needs.report.result }}" 
+          # echo "Job lint succeeded: ${{ needs.lint.result }}"
+          # echo "Job test succeeded: ${{ needs.test.result }}"
+          # echo "Job build succeeded: ${{ needs.build.result }}"
+          # echo "Job deploy succeeded: ${{ needs.deploy.result }}" 
+          # echo "Job report succeeded: ${{ needs.report.result }}" 
+
+          echo "Job lint succeeded: $LINT_FLAG"
+          echo "Job test succeeded: $TEST_FLAG"
+          echo "Job build succeeded: $BUILD_FLAG"
+          echo "Job deploy succeeded: $DEPLOY_FLAG" 
+          echo "Job report succeeded: $REPORT_FLAG" 
         
