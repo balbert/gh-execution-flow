@@ -117,7 +117,6 @@ jobs:
           echo "TEST_SUCCESS: $TEST_SUCCESS"
           echo "BUILD_SUCCESS: $BUILD_SUCCESS"
           echo "DEPLOY_SUCCESS: $DEPLOY_SUCCESS"
-          echo "REPORT_SUCCESS: $REPORT_SUCCESS"
 
       - name: Output context information
         run: |
