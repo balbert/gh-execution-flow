@@ -47,8 +47,8 @@ jobs:
           path: test.json
 
   build:
-    needs: test
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Get code
         uses: actions/checkout@v3
@@ -71,8 +71,8 @@ jobs:
           path: dist
 
   deploy:
-    needs: build
     runs-on: ubuntu-latest
+    needs: build
     steps:
       - name: Get build artifacts
         uses: actions/download-artifact@v4
@@ -84,17 +84,17 @@ jobs:
         run: echo "Deploying..."
 
   report:
+    runs-on: ubuntu-latest
     needs:
       - lint
       - test
       - build
       - deploy
-    runs-on: ubuntu-latest
     env:
-      LINT_FLAG: ${{ needs.lint.result != 'success' }}
-      TEST_FLAG: ${{ needs.test.result != 'success' }}
-      BUILD_FLAG: ${{ needs.build.result != 'success' }}
-      DEPLOY_FLAG: ${{ needs.deploy.result != 'success' }}
+      LINT_SUCCESS: ${{ needs.lint.result == 'success' }}
+      TEST_SUCCESS: ${{ needs.test.result == 'success' }}
+      BUILD_SUCCESS: ${{ needs.build.result == 'success' }}
+      DEPLOY_SUCCESS: ${{ needs.deploy.result == 'success' }}
 
     # Talk about stupid, this one liner should work
     # if: failure()
@@ -108,42 +108,48 @@ jobs:
     # Tried to simplify the hack, but no dice, you
     # can't use environment variables in conditionals.
     # Conditionals are scoped at job level...
-    # if: always() && ( $LINT_FLAG || $RESULT_FLAG || $BUILD_FLAG || $DEPLOY_FLAG )
+    # if: always() && !($LINT_SUCCESS && $RESULT_SUCCESS && $BUILD_SUCCESS && $DEPLOY_SUCCESS)
 
     steps:
-      - name: Debug information          
+      - name: Output debug information          
         run: |
-          echo "LINT_FLAG: $LINT_FLAG"
-          echo "TEST_FLAG: $TEST_FLAG"
-          echo "BUILD_FLAG: $BUILD_FLAG"
-          echo "DEPLOY_FLAG: $DEPLOY_FLAG"
+          echo "LINT_SUCCESS: $LINT_SUCCESS"
+          echo "TEST_SUCCESS: $TEST_SUCCESS"
+          echo "BUILD_SUCCESS: $BUILD_SUCCESS"
+          echo "DEPLOY_SUCCESS: $DEPLOY_SUCCESS"
 
-      - name: Output information
+      - name: Output context information
         run: |
           echo "Something went wrong"
           echo "${{ toJSON(github) }}"
 
   results:
+    runs-on: ubuntu-latest
     needs: [lint, test, build, deploy, report]
     if: always()
-    runs-on: ubuntu-latest
+
     env:
-      LINT_FLAG: ${{ needs.lint.result == 'success' }}
-      TEST_FLAG: ${{ needs.test.result == 'success' }}
-      BUILD_FLAG: ${{ needs.build.result == 'success' }}
-      DEPLOY_FLAG: ${{ needs.deploy.result == 'success' }}
+      LINT_SUCCESS: ${{ needs.lint.result == 'success' }}
+      TEST_SUCCESS: ${{ needs.test.result == 'success' }}
+      BUILD_SUCCESS: ${{ needs.build.result == 'success' }}
+      DEPLOY_SUCCESS: ${{ needs.deploy.result == 'success' }}
+
     steps:
       - name: Output results
         run: |
-          # echo "Job lint succeeded: ${{ needs.lint.result }}"
-          # echo "Job test succeeded: ${{ needs.test.result }}"
-          # echo "Job build succeeded: ${{ needs.build.result }}"
-          # echo "Job deploy succeeded: ${{ needs.deploy.result }}" 
-          # echo "Job report succeeded: ${{ needs.report.result }}" 
-
-          echo "Job lint succeeded: $LINT_FLAG"
-          echo "Job test succeeded: $TEST_FLAG"
-          echo "Job build succeeded: $BUILD_FLAG"
-          echo "Job deploy succeeded: $DEPLOY_FLAG" 
-          echo "Job report succeeded: $REPORT_FLAG" 
+          echo
+          echo "Results..."
+          echo
+          echo "Job lint result: ${{ needs.lint.result }}"
+          echo "Job test result: ${{ needs.test.result }}"
+          echo "Job build result: ${{ needs.build.result }}"
+          echo "Job deploy result: ${{ needs.deploy.result }}" 
+          echo "Job report result: ${{ needs.report.result }}" 
+          echo
+          echo "Job lint succeeded: $LINT_SUCCESS"
+          echo "Job test succeeded: $TEST_SUCCESS"
+          echo "Job build succeeded: $BUILD_SUCCESS"
+          echo "Job deploy succeeded: $DEPLOY_SUCCESS" 
+          echo "Job report succeeded: $REPORT_SUCCESS" 
+          echo
         
