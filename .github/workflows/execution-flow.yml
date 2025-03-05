@@ -87,3 +87,14 @@ jobs:
         run: |
           echo "Something went wrong"
           echo "${{ toJSON(github) }}"
+  results:
+    needs: [lint, test, build, deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Output results
+        run: |
+          echo "LINT: ${{ needs.lint.result }}"
+          echo "TEST: ${{ needs.test.result }}"
+          echo "BUILD: ${{ needs.build.result }}"
+          echo "DEPLOY: ${{ needs.deploy.result }}" 
+        
