@@ -80,7 +80,8 @@ jobs:
         run: echo "Deploying..."
   report:
     needs: [lint, test, build, deploy]
-    if: needs.lint.result != 'success' || needs.test.result != 'success' || needs.build.result != 'success' || needs.deploy.result != 'success' 
+    #if: failure()
+    if: always() && (needs.lint.result != 'success' || needs.test.result != 'success' || needs.build.result != 'success' || needs.deploy.result != 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Output information
