@@ -117,13 +117,14 @@ jobs:
           echo "TEST_SUCCESS: $TEST_SUCCESS"
           echo "BUILD_SUCCESS: $BUILD_SUCCESS"
           echo "DEPLOY_SUCCESS: $DEPLOY_SUCCESS"
+          echo "REPORT_SUCCESS: $REPORT_SUCCESS"
 
       - name: Output context information
         run: |
           echo "Something went wrong"
           echo "${{ toJSON(github) }}"
 
-  results:
+  results: # Debug
     runs-on: ubuntu-latest
     needs: [lint, test, build, deploy, report]
     if: always()
@@ -133,6 +134,7 @@ jobs:
       TEST_SUCCESS: ${{ needs.test.result == 'success' }}
       BUILD_SUCCESS: ${{ needs.build.result == 'success' }}
       DEPLOY_SUCCESS: ${{ needs.deploy.result == 'success' }}
+      REPORT_SUCCESS: ${{ needs.report.result == 'success' }}
 
     steps:
       - name: Output results
