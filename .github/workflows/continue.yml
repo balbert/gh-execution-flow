@@ -111,7 +111,7 @@ jobs:
     # if: always() && !($LINT_SUCCESS && $RESULT_SUCCESS && $BUILD_SUCCESS && $DEPLOY_SUCCESS)
 
     steps:
-      - name: Output debug information          
+      - name: Output debug information
         run: |
           echo "LINT_SUCCESS: $LINT_SUCCESS"
           echo "TEST_SUCCESS: $TEST_SUCCESS"
@@ -144,13 +144,12 @@ jobs:
           echo "Job lint result: ${{ needs.lint.result }}"
           echo "Job test result: ${{ needs.test.result }}"
           echo "Job build result: ${{ needs.build.result }}"
-          echo "Job deploy result: ${{ needs.deploy.result }}" 
-          echo "Job report result: ${{ needs.report.result }}" 
+          echo "Job deploy result: ${{ needs.deploy.result }}"
+          echo "Job report result: ${{ needs.report.result }}"
           echo
           echo "Job lint succeeded: $LINT_SUCCESS"
           echo "Job test succeeded: $TEST_SUCCESS"
           echo "Job build succeeded: $BUILD_SUCCESS"
-          echo "Job deploy succeeded: $DEPLOY_SUCCESS" 
-          echo "Job report succeeded: $REPORT_SUCCESS" 
+          echo "Job deploy succeeded: $DEPLOY_SUCCESS"
+          echo "Job report succeeded: $REPORT_SUCCESS"
           echo
-        
